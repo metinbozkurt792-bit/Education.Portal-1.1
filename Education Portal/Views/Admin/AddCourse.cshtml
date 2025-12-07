@@ -1,0 +1,39 @@
+﻿@model Education_Portal.Models.Course
+
+@{
+    ViewData["Title"] = "Yeni Kurs Ekle";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="card col-md-6 mx-auto">
+    <div class="card-header bg-primary text-white">
+        <h4>Yeni Kurs Oluştur</h4>
+    </div>
+    <div class="card-body">
+        <form asp-action="AddCourse" method="post">
+
+            <div class="mb-3">
+                <label>Kurs Başlığı</label>
+                <input type="text" name="Title" class="form-control" required placeholder="Örn: C# Başlangıç" />
+            </div>
+
+            <div class="mb-3">
+                <label>Kategori</label>
+                <select name="CategoryId" class="form-select" required>
+                    <option value="">Seçiniz...</option>
+                    @foreach (var cat in ViewBag.Categories)
+                    {
+                        <option value="@cat.Id">@cat.Name</option>
+                    }
+                </select>
+            </div>
+
+            <div class="mb-3">
+                <label>Kurs Açıklaması</label>
+                <textarea name="Description" class="form-control" rows="5" placeholder="İçerik hakkında bilgi..."></textarea>
+            </div>
+
+            <button type="submit" class="btn btn-success w-100">Kaydet</button>
+        </form>
+    </div>
+</div>

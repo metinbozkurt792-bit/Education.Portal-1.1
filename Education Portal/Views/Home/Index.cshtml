@@ -1,0 +1,86 @@
+﻿@model List<Education_Portal.Models.Course>
+
+@{
+    ViewData["Title"] = "Ana Sayfa";
+    var categories = ViewBag.Categories as List<Education_Portal.Models.Category>;
+}
+
+<div class="container mt-5">
+
+    <div class="text-center mb-5">
+        <h1 class="display-5 fw-bold mb-3">Hayalindeki Kursu Bul</h1>
+        <p class="lead text-muted">Kategorini seç ve öğrenmeye hemen başla.</p>
+    </div>
+
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-5">
+        <button class="btn btn-dark category-btn active" data-id="0">Tümü</button>
+
+        @if (categories != null)
+        {
+            foreach (var cat in categories)
+            {
+                <button class="btn btn-outline-secondary category-btn" data-id="@cat.Id">
+                    @cat.Name
+                </button>
+            }
+        }
+    </div>
+
+    <div id="courseContainer" style="min-height: 300px;">
+        <partial name="_CourseList" model="Model" />
+    </div>
+
+    <div id="loader" class="text-center py-5" style="display:none;">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Yükleniyor...</span>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+
+            // Sadece "Kategori Butonuna" tıklandığında çalışır
+            $(".category-btn").click(function () {
+
+                // 1. Görsel aktiflik ayarı (Basılan butonu koyu yap, diğerlerini aç)
+                $(".category-btn").removeClass("btn-dark active").addClass("btn-outline-secondary");
+                $(this).removeClass("btn-outline-secondary").addClass("btn-dark active");
+
+                // 2. Kategori ID'sini al ve fonksiyonu çağır
+                var selectedCatId = $(this).data("id");
+                LoadCourses(selectedCatId);
+            });
+
+            // --- ANA FONKSİYON ---
+            function LoadCourses(catId) {
+
+                // Listeyi hafif silik yap, loader'ı göster
+                $("#courseContainer").css("opacity", "0.3");
+                $("#loader").show();
+
+                $.ajax({
+                    url: '/Home/GetCourses',
+                    type: 'GET',
+                    // Search parametresini boş gönderiyoruz çünkü artık yok
+                    data: { categoryId: catId, search: "" },
+                    success: function (res) {
+                        // Gelen HTML'i yapıştır
+                        $("#courseContainer").html(res);
+
+                        // Efektleri geri al
+                        $("#courseContainer").animate({ opacity: 1 }, 200);
+                        $("#loader").hide();
+                    },
+                    error: function () {
+                        alert("Bir hata oluştu! Lütfen sayfayı yenileyin.");
+                        $("#loader").hide();
+                        $("#courseContainer").css("opacity", "1");
+                    }
+                });
+            }
+        });
+    </script>
+}

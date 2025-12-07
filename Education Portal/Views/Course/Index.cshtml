@@ -1,0 +1,30 @@
+﻿@model List<Education_Portal.Models.Course>
+@{
+    ViewData["Title"] = "Tüm Kurslar";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Mevcut Kurslar</h2>
+    <div class="row">
+        @foreach (var item in Model)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title">@item.Title</h5>
+                        <h6 class="card-subtitle mb-2 text-muted">@item.Category?.Name</h6>
+                        <p class="card-text">
+                            @{
+                                var description = item.Description ?? "";
+                            }
+
+                            @(description.Length > 100 ? description.Substring(0, 100) + "..." : description)
+                        </p>
+                        <a href="/Course/Details/@item.Id" class="btn btn-primary w-100">Kursu İncele</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

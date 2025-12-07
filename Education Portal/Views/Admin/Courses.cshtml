@@ -1,0 +1,38 @@
+﻿@model List<Education_Portal.Models.Course>
+
+@{
+    ViewData["Title"] = "Kurslarım";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h2>Kurs Yönetimi</h2>
+    <a href="/Admin/AddCourse" class="btn btn-primary">+ Yeni Kurs</a>
+</div>
+
+<div class="row">
+    @foreach (var item in Model)
+    {
+        <div class="col-md-4 mb-4">
+            <div class="card h-100 shadow-sm border-start border-4 border-primary">
+                <div class="card-body">
+                    <span class="badge bg-secondary mb-2">@item.Category?.Name</span>
+
+                    <h5 class="card-title fw-bold">@item.Title</h5>
+
+                    <p class="card-text text-muted">
+                        @(item.Description != null && item.Description.Length > 100
+                                            ? item.Description.Substring(0, 100) + "..."
+                                            : item.Description)
+                    </p>
+                </div>
+
+                <div class="card-footer bg-white text-end">
+                    <a href="/Admin/UpdateCourse/@item.Id" class="btn btn-sm btn-outline-warning">Düzenle</a>
+                    <a href="/Admin/DeleteCourse/@item.Id" class="btn btn-sm btn-outline-danger" onclick="return confirm('Silmek istediğine emin misin?')">Sil</a>
+                    <a href="/Admin/CourseVideos/@item.Id" class="btn btn-sm btn-outline-info">Videolar</a>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,0 +1,78 @@
+﻿@model List<Education_Portal.Models.Course>
+
+<div class="row">
+    @if (Model.Any())
+    {
+        foreach (var course in Model)
+        {
+            <div class="col-md-4 mb-4 fade-in">
+                <div class="card h-100 shadow-sm border-0">
+                    <div class="bg-light text-center py-4 text-secondary">
+                        <i class="fas fa-laptop-code fa-3x"></i>
+                    </div>
+
+                    <div class="card-body">
+                        <h5 class="card-title fw-bold">@course.Title</h5>
+
+                        <p class="card-text text-muted small">
+                            @{
+                                var description = course.Description;
+                            }
+
+                            @if (!string.IsNullOrEmpty(description) && description.Length > 60)
+                            {
+                                @description.Substring(0, 60) <text>...</text>
+                            }
+                            else
+                            {
+                                @(description ?? "Bu kurs için henüz açıklama girilmemiş.")
+                            }
+                        </p>
+                        <div class="d-flex justify-content-between align-items-center mt-3">
+                            <span class="badge bg-primary rounded-pill">
+                                @(course.Category != null ? course.Category.Name : "Genel")
+                            </span>
+                            <span class="text-warning small">
+                                <i class="fas fa-star"></i> 4.8
+                            </span>
+                        </div>
+                    </div>
+
+                    <div class="card-footer bg-white border-0 pb-3">
+                        <a href="/Course/Details/@course.Id" class="btn btn-outline-dark w-100 btn-sm">
+                            Kursa Git <i class="fas fa-arrow-right ms-1"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="col-12 text-center mt-5">
+            <div class="alert alert-light border shadow-sm">
+                <i class="fas fa-search fa-2x text-muted mb-3"></i>
+                <h5>Sonuç Bulunamadı</h5>
+                <p class="text-muted">Aradığınız kriterlere uygun kurs yok.</p>
+            </div>
+        </div>
+    }
+</div>
+
+<style>
+    .fade-in {
+        animation: fadeIn 0.5s;
+    }
+
+    @@keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+</style>

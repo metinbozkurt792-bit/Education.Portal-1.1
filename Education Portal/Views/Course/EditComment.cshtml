@@ -1,0 +1,45 @@
+﻿@model Education_Portal.Models.Comment
+
+@{
+    ViewData["Title"] = "Yorumu Düzenle";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Yorumu Düzenle</h5>
+                </div>
+                <div class="card-body">
+                    <form asp-action="EditComment" method="post">
+                        <input type="hidden" asp-for="Id" />
+
+                        <div class="mb-3">
+                            <label class="form-label">Puanınız</label>
+                            <select asp-for="Rating" class="form-select">
+                                <option value="5">⭐⭐⭐⭐⭐ (Mükemmel)</option>
+                                <option value="4">⭐⭐⭐⭐ (İyi)</option>
+                                <option value="3">⭐⭐⭐ (Orta)</option>
+                                <option value="2">⭐⭐ (Kötü)</option>
+                                <option value="1">⭐ (Berbat)</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Yorumunuz</label>
+                            <textarea asp-for="Content" class="form-control" rows="4"></textarea>
+                            <span asp-validation-for="Content" class="text-danger"></span>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a asp-action="Details" asp-route-id="@Model.CourseId" class="btn btn-secondary">İptal</a>
+                            <button type="submit" class="btn btn-success">Değişiklikleri Kaydet</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

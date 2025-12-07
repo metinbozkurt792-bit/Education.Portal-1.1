@@ -1,0 +1,41 @@
+﻿@model Education_Portal.Models.Video
+
+@{
+    ViewData["Title"] = "Video Yükle";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="card col-md-6 mx-auto">
+    <div class="card-header">
+        <h4>Yeni Video Yükle</h4>
+    </div>
+    <div class="card-body">
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">
+                <i class="fas fa-exclamation-triangle me-2"></i> @ViewBag.Error
+            </div>
+        }
+        <form asp-action="AddVideo" method="post" enctype="multipart/form-data">
+
+            <input type="hidden" name="CourseId" value="@ViewBag.CourseId" />
+
+            <div class="mb-3">
+                <label>Ders Başlığı</label>
+                <input type="text" name="Title" class="form-control" required placeholder="Örn: Ders 1 - Giriş" />
+            </div>
+
+            <div class="mb-3">
+                <label>Sıra No</label>
+                <input type="number" name="VideoOrder" class="form-control" required value="@ViewBag.NextOrder" min="1" />
+            </div>
+
+            <div class="mb-3">
+                <label>Video Dosyası (MP4)</label>
+                <input type="file" name="videoFile" class="form-control" accept="video/mp4" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100">Yükle</button>
+        </form>
+    </div>
+</div>

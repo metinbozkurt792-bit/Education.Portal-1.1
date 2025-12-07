@@ -1,0 +1,40 @@
+﻿@model List<Education_Portal.Models.Video>
+
+@{
+    ViewData["Title"] = "Kurs Videoları";
+    Layout = "~/Views/Shared/_LayoutAdmin.cshtml";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h3>Kurs İçerikleri</h3>
+    <a href="/Admin/AddVideo?courseId=@ViewBag.CourseId" class="btn btn-success">+ Yeni Video Ekle</a>
+</div>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Sıra</th>
+            <th>Başlık</th>
+            <th>İzle</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td>@item.VideoOrder</td>
+                <td>@item.Title</td>
+                <td>
+                    <a href="@item.Url" target="_blank" class="btn btn-sm btn-info">Videoyu Aç</a>
+
+                    <a href="/Admin/DeleteVideo/@item.Id"
+                       class="btn btn-sm btn-danger ms-2"
+                       onclick="return confirm('Bu videoyu silmek istediğine emin misin?');">
+                        Sil
+                    </a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<a href="/Admin/Courses" class="btn btn-secondary">Kurslara Dön</a>

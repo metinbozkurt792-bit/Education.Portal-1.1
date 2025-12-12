@@ -42,14 +42,11 @@
     <script>
         $(document).ready(function () {
 
-            // Sadece "Kategori Butonuna" tıklandığında çalışır
             $(".category-btn").click(function () {
 
-                // 1. Görsel aktiflik ayarı (Basılan butonu koyu yap, diğerlerini aç)
                 $(".category-btn").removeClass("btn-dark active").addClass("btn-outline-secondary");
                 $(this).removeClass("btn-outline-secondary").addClass("btn-dark active");
 
-                // 2. Kategori ID'sini al ve fonksiyonu çağır
                 var selectedCatId = $(this).data("id");
                 LoadCourses(selectedCatId);
             });
@@ -57,20 +54,17 @@
             // --- ANA FONKSİYON ---
             function LoadCourses(catId) {
 
-                // Listeyi hafif silik yap, loader'ı göster
                 $("#courseContainer").css("opacity", "0.3");
                 $("#loader").show();
 
                 $.ajax({
                     url: '/Home/GetCourses',
                     type: 'GET',
-                    // Search parametresini boş gönderiyoruz çünkü artık yok
+
                     data: { categoryId: catId, search: "" },
                     success: function (res) {
-                        // Gelen HTML'i yapıştır
                         $("#courseContainer").html(res);
 
-                        // Efektleri geri al
                         $("#courseContainer").animate({ opacity: 1 }, 200);
                         $("#loader").hide();
                     },

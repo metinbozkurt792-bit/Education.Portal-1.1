@@ -31,10 +31,58 @@
             <div class="card text-white bg-warning mb-3">
                 <div class="card-header">Kullanıcılar</div>
                 <div class="card-body">
-                    <h5 class="card-title display-4">@ViewBag.UserCount</h5>
-                    <p class="card-text">Kayıtlı kullanıcı sayısı.</p>
+                    <h5 class="card-title display-4" id="liveUserCount">@ViewBag.UserCount</h5>
+                    <p class="card-text">
+                        Kayıtlı kullanıcı sayısı.
+                        <small class="d-block" style="font-size: 12px; opacity: 0.8;">(Canlı Güncellenir)</small>
+                    </p>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/microsoft-signalr/7.0.5/signalr.min.js"></script>
+
+<script type="text/javascript">
+    var connection = new signalR.HubConnectionBuilder().withUrl("/generalHub").build();
+
+    connection.on("ReceiveUserCount", function (count) {
+        var counterElement = document.getElementById("liveUserCount");
+        if (counterElement) {
+            counterElement.innerText = count;
+        }
+    });
+
+    connection.on("ReceiveNotification", function (message) {
+        var alertHtml = `
+            <div class="alert alert-danger alert-dismissible fade show" role="alert"
+                 style="position: fixed; top: 20px; right: 20px; z-index: 9999; box-shadow: 0 4px 8px rgba(0,0,0,0.2);">
+                <i class="fas fa-exclamation-triangle me-2"></i> <strong>Bildirim:</strong> ${message}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>`;
+
+        document.body.insertAdjacentHTML('beforeend', alertHtml);
+
+        setTimeout(function() {
+            var alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                try {
+                    var bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                } catch (e) {
+                    alert.remove();
+                }
+            });
+        }, 4000);
+    });
+
+    connection.start().then(function () {
+        console.log("SignalR Bağlandı.");
+        connection.invoke("GetTotalUserCount").catch(function (err) {
+            return console.error(err.toString());
+        });
+    }).catch(function (err) {
+        return console.error(err.toString());
+    });
+</script>

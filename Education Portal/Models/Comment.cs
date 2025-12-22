@@ -21,9 +21,9 @@ namespace Education_Portal.Models
 
         public int UserId { get; set; }
         [ForeignKey("UserId")]
-        public User User { get; set; }
+        public AppUser User { get; set; }
 
-        public int VideoId { get; set; }
+        public int? VideoId { get; set; }
         public Video Video { get; set; }
     }
 }

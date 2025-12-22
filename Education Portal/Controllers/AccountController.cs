@@ -1,26 +1,30 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Education_Portal.Models;
-using Education_Portal.Repositories;
+using Microsoft.AspNetCore.Authorization;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 
 namespace Education_Portal.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserRepository _userRepository;
+        private readonly UserManager<AppUser> _userManager;
+        private readonly SignInManager<AppUser> _signInManager;
 
-        public AccountController(UserRepository userRepository)
+        public AccountController(UserManager<AppUser> userManager, SignInManager<AppUser> signInManager)
         {
-            _userRepository = userRepository;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
+        [HttpGet]
         public IActionResult Login()
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index", "Course");
+                return RedirectToAction("Index", "Home");
             }
             return View();
         }
@@ -28,7 +32,8 @@ namespace Education_Portal.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string email, string password)
         {
-            var user = _userRepository.GetByEmailAndPassword(email, password);
+            var user = await _userManager.FindByEmailAsync(email);
+
             if (user != null)
             {
                 if (user.BanEndDate != null && user.BanEndDate > DateTime.Now)
@@ -36,67 +41,70 @@ namespace Education_Portal.Controllers
                     ViewBag.Error = $"Hesabınız {user.BanEndDate?.ToString("dd.MM.yyyy HH:mm")} tarihine kadar askıya alınmıştır.";
                     return View();
                 }
-                var claims = new List<Claim>
+                var result = await _signInManager.PasswordSignInAsync(user, password, isPersistent: false, lockoutOnFailure: false);
+
+                if (result.Succeeded)
                 {
-                    new Claim(ClaimTypes.Name, user.FullName ?? user.Email),
-                    new Claim(ClaimTypes.Email, user.Email),
-                    new Claim(ClaimTypes.Role, user.Role),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-                };
-                var claimsIdentity = new ClaimsIdentity(claims, "Cookies");
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = false,
-                    ExpiresUtc = DateTime.UtcNow.AddHours(1)
-                };
-                await HttpContext.SignInAsync("Cookies", new ClaimsPrincipal(claimsIdentity), authProperties);
-                if (user.Role == "Admin")
-                {
-                    return RedirectToAction("Index", "Admin");
+                    return user.Role == "Admin"
+                        ? RedirectToAction("Index", "Admin")
+                        : RedirectToAction("Index", "Home");
                 }
-                return RedirectToAction("Index", "Course");
             }
             ViewBag.Error = "Email veya şifre hatalı!";
             return View();
         }
-
+        [HttpGet]
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync("Cookies");
-            return RedirectToAction("Index", "Course");
+            await _signInManager.SignOutAsync();
+            return RedirectToAction("Index", "Home");
         }
-
+        [HttpGet]
         public IActionResult Register()
         {
-            if (User.Identity.IsAuthenticated)
+            if (User.Identity?.IsAuthenticated == true)
             {
-                return RedirectToAction("Index", "Course");
+                return RedirectToAction("Index", "Home");
             }
             return View();
         }
-
         [HttpPost]
-        public IActionResult Register(string fullName, string email, string password)
+        public async Task<IActionResult> Register(string fullName, string email, string password)
         {
             if (!email.EndsWith("@user.com"))
             {
                 ViewBag.Error = "Sadece '@user.com' uzantılı mail adresleri kayıt olabilir!";
                 return View();
             }
-            if (_userRepository.IsEmailExists(email))
+            var existingUser = await _userManager.FindByEmailAsync(email);
+            if (existingUser != null)
             {
                 ViewBag.Error = "Bu email adresi zaten kayıtlı!";
                 return View();
             }
-            var newUser = new User
+            var newUser = new AppUser
             {
-                FullName = fullName,
+                UserName = email,
                 Email = email,
-                Password = password,
+                FullName = fullName,
                 Role = "User"
             };
-            _userRepository.Add(newUser);
-            return RedirectToAction("Login");
+            var result = await _userManager.CreateAsync(newUser, password);
+            if (result.Succeeded)
+            {
+                await _userManager.AddToRoleAsync(newUser, "User");
+
+                TempData["SuccessMessage"] = "Kayıt işleminiz başarılı! Lütfen giriş yapınız.";
+                return RedirectToAction("Login");
+            }
+
+            ViewBag.Error = result.Errors.FirstOrDefault()?.Description ?? "Kayıt sırasında bir hata oluştu.";
+            return View();
+        }
+        [AllowAnonymous]
+        public IActionResult AccessDenied()
+        {
+            return View();
         }
     }
 }

@@ -6,15 +6,22 @@
         foreach (var course in Model)
         {
             <div class="col-md-4 mb-4 fade-in">
-                <div class="card h-100 shadow-sm border-0">
+                <div class="card h-100 shadow-sm border-0 hover-effect">
                     <div class="bg-light text-center py-4 text-secondary">
                         <i class="fas fa-laptop-code fa-3x"></i>
                     </div>
 
-                    <div class="card-body">
+                    <div class="card-body d-flex flex-column">
+
+                        <div class="mb-2">
+                            <span class="badge bg-primary rounded-pill">
+                                @(course.Category != null ? course.Category.Name : "Genel")
+                            </span>
+                        </div>
+
                         <h5 class="card-title fw-bold">@course.Title</h5>
 
-                        <p class="card-text text-muted small">
+                        <p class="card-text text-muted small flex-grow-1">
                             @{
                                 var description = course.Description;
                             }
@@ -28,13 +35,23 @@
                                 @(description ?? "Bu kurs için henüz açıklama girilmemiş.")
                             }
                         </p>
-                        <div class="d-flex justify-content-between align-items-center mt-3">
-                            <span class="badge bg-primary rounded-pill">
-                                @(course.Category != null ? course.Category.Name : "Genel")
-                            </span>
+
+                        <div class="d-flex justify-content-between align-items-center mt-3 border-top pt-3">
                             <span class="text-warning small">
-                                <i class="fas fa-star"></i> 4.8
+                                <i class="fas fa-star"></i>
+                                @(course.Comments != null && course.Comments.Any() ? course.Comments.Average(c => c.Rating).ToString("0.0") : "0.0")
                             </span>
+
+                            <h5 class="mb-0 fw-bold">
+                                @if (course.Price == 0)
+                                {
+                                    <span class="text-success">Ücretsiz</span>
+                                }
+                                else
+                                {
+                                    <span class="text-primary">₺@course.Price</span>
+                                }
+                            </h5>
                         </div>
                     </div>
 
@@ -63,6 +80,15 @@
     .fade-in {
         animation: fadeIn 0.5s;
     }
+
+    .hover-effect {
+        transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+        .hover-effect:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
+        }
 
     @@keyframes fadeIn {
         from {

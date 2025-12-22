@@ -1,0 +1,56 @@
+﻿@model List<Education_Portal.Models.Course>
+
+@{
+    ViewData["Title"] = "Kurslarım";
+    Layout = "~/Views/Shared/_LayoutCourse.cshtml";
+}
+
+<div class="container mt-5">
+
+    <div class="d-flex align-items-center mb-4">
+        <i class="fas fa-user-graduate fa-2x text-primary me-3"></i>
+        <h2 class="mb-0">Öğrenmeye Devam Et</h2>
+    </div>
+
+    @if (Model.Count == 0)
+    {
+        <div class="alert alert-info text-center p-5">
+            <h4>Henüz kayıtlı bir kursunuz yok.</h4>
+            <p>Kendinizi geliştirmek için hemen bir kursa başlayın!</p>
+            <a href="/Home/Index" class="btn btn-primary mt-3">Kursları Keşfet</a>
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var item in Model)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow border-0">
+                        <div class="card-header bg-dark text-white text-center py-4">
+                            <i class="fas fa-play-circle fa-3x"></i>
+                        </div>
+
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title fw-bold">@item.Title</h5>
+                            <span class="badge bg-secondary w-auto align-self-start mb-2">@item.Category?.Name</span>
+
+                            <div class="mt-3 mb-3">
+                                <small class="text-muted">Tamamlanma: %0</small>
+                                <div class="progress" style="height: 5px;">
+                                    <div class="progress-bar bg-success" role="progressbar" style="width: 0%"></div>
+                                </div>
+                            </div>
+
+                            <div class="mt-auto">
+                                <a href="/Course/CourseVideos/@item.Id" class="btn btn-primary w-100">
+                                    <i class="fas fa-play me-2"></i> Dersi İzle
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>

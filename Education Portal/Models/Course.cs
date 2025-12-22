@@ -18,5 +18,10 @@ namespace Education_Portal.Models
         [ForeignKey("CategoryId")]
         public Category Category { get; set; }
         public List<Video> Videos { get; set; }
+        [Column(TypeName = "decimal(18,2)")] 
+        public decimal Price { get; set; }
+        public List<Comment> Comments { get; set; }
+        // Listenin en altına
+        public List<Enrollment> Enrollments { get; set; }
     }
 }

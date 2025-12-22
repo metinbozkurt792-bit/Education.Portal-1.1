@@ -16,7 +16,10 @@ namespace Education_Portal.Repositories
 
         public List<Course> GetAll()
         {
-            return _context.Courses.Include(x => x.Category).ToList();
+            return _context.Courses
+                           .Include(c => c.Category)
+                           .Include(c => c.Comments) 
+                           .ToList();
         }
 
         public void Add(Course course)

@@ -2,14 +2,27 @@
 
 @{
     ViewData["Title"] = "Ana Sayfa";
+    Layout = "~/Views/Shared/_LayoutCourse.cshtml";
+
     var categories = ViewBag.Categories as List<Education_Portal.Models.Category>;
 }
 
 <div class="container mt-5">
 
-    <div class="text-center mb-5">
+    <div class="text-center mb-4">
         <h1 class="display-5 fw-bold mb-3">Hayalindeki Kursu Bul</h1>
-        <p class="lead text-muted">Kategorini seç ve öğrenmeye hemen başla.</p>
+        <p class="lead text-muted">Kategorini seç veya arama yap, öğrenmeye hemen başla.</p>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-md-8 col-lg-6">
+            <div class="input-group input-group-lg shadow-sm">
+                <input type="text" id="txtSearch" class="form-control border-secondary" placeholder="Kurs adı veya konu ara..." aria-label="Arama">
+                <button class="btn btn-dark px-4" type="button" id="btnSearch">
+                    <i class="fas fa-search me-2"></i>Ara
+                </button>
+            </div>
+        </div>
     </div>
 
     <div class="d-flex justify-content-center flex-wrap gap-2 mb-5">
@@ -42,17 +55,30 @@
     <script>
         $(document).ready(function () {
 
-            $(".category-btn").click(function () {
+            var currentCategoryId = 0;
 
+
+            $(".category-btn").click(function () {
                 $(".category-btn").removeClass("btn-dark active").addClass("btn-outline-secondary");
                 $(this).removeClass("btn-outline-secondary").addClass("btn-dark active");
 
-                var selectedCatId = $(this).data("id");
-                LoadCourses(selectedCatId);
+                currentCategoryId = $(this).data("id"); 
+                LoadCourses(); 
             });
 
-            // --- ANA FONKSİYON ---
-            function LoadCourses(catId) {
+            $("#btnSearch").click(function () {
+                LoadCourses();
+            });
+
+            $("#txtSearch").keypress(function (e) {
+                if (e.which == 13) { 
+                    LoadCourses();
+                }
+            });
+
+            function LoadCourses() {
+
+                var searchText = $("#txtSearch").val();
 
                 $("#courseContainer").css("opacity", "0.3");
                 $("#loader").show();
@@ -60,11 +86,9 @@
                 $.ajax({
                     url: '/Home/GetCourses',
                     type: 'GET',
-
-                    data: { categoryId: catId, search: "" },
+                    data: { categoryId: currentCategoryId, search: searchText },
                     success: function (res) {
                         $("#courseContainer").html(res);
-
                         $("#courseContainer").animate({ opacity: 1 }, 200);
                         $("#loader").hide();
                     },

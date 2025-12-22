@@ -1,10 +1,13 @@
-﻿using Education_Portal.Models;
+﻿using Education_Portal.Hubs;
+using Education_Portal.Models;
 using Education_Portal.Repositories;
+using Education_Portal.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.SignalR;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using System;
 
 namespace Education_Portal.Controllers
 {
@@ -15,72 +18,34 @@ namespace Education_Portal.Controllers
         private readonly CourseRepository _courseRepository;
         private readonly VideoRepository _videoRepository;
         private readonly UserRepository _userRepository;
+        private readonly UserManager<AppUser> _userManager;
         private readonly ApplicationDbContext _context;
+        private readonly IHubContext<GeneralHub> _hubContext;
 
-        public AdminController(CategoryRepository categoryRepository, CourseRepository courseRepository, VideoRepository videoRepository, UserRepository userRepository, ApplicationDbContext context)
+        public AdminController(
+            CategoryRepository categoryRepository,
+            CourseRepository courseRepository,
+            VideoRepository videoRepository,
+            UserRepository userRepository,
+            UserManager<AppUser> userManager,
+            ApplicationDbContext context,
+            IHubContext<GeneralHub> hubContext)
         {
             _categoryRepository = categoryRepository;
             _courseRepository = courseRepository;
             _videoRepository = videoRepository;
             _userRepository = userRepository;
+            _userManager = userManager;
             _context = context;
+            _hubContext = hubContext;
         }
 
         public IActionResult Index()
         {
             ViewBag.CourseCount = _courseRepository.GetAll().Count;
             ViewBag.CategoryCount = _categoryRepository.GetAll().Count;
-            ViewBag.UserCount = _userRepository.GetAll().Count;
+            ViewBag.UserCount = _userManager.Users.Count();
             return View();
-        }
-
-        public IActionResult Categories()
-        {
-            var categories = _categoryRepository.GetAll();
-            return View(categories);
-        }
-
-        public IActionResult AddCategory()
-        {
-            return View();
-        }
-
-        [HttpPost]
-        public IActionResult AddCategory(Category category)
-        {
-            if (ModelState.IsValid)
-            {
-                _categoryRepository.Add(category);
-                return RedirectToAction("Categories");
-            }
-            return View(category);
-        }
-
-        public IActionResult DeleteCategory(int id)
-        {
-            _categoryRepository.Delete(id);
-            return RedirectToAction("Categories");
-        }
-
-        public IActionResult UpdateCategory(int id)
-        {
-            var category = _categoryRepository.GetById(id);
-            if (category == null)
-            {
-                return RedirectToAction("Categories");
-            }
-            return View(category);
-        }
-
-        [HttpPost]
-        public IActionResult UpdateCategory(Category category)
-        {
-            if (ModelState.IsValid)
-            {
-                _categoryRepository.Update(category);
-                return RedirectToAction("Categories");
-            }
-            return View(category);
         }
 
         public IActionResult Courses()
@@ -105,10 +70,7 @@ namespace Education_Portal.Controllers
         public IActionResult UpdateCourse(int id)
         {
             var course = _courseRepository.GetById(id);
-            if (course == null)
-            {
-                return RedirectToAction("Courses");
-            }
+            if (course == null) return RedirectToAction("Courses");
             ViewBag.Categories = _categoryRepository.GetAll();
             return View(course);
         }
@@ -116,7 +78,15 @@ namespace Education_Portal.Controllers
         [HttpPost]
         public IActionResult UpdateCourse(Course course)
         {
-            _courseRepository.Update(course);
+            var existingCourse = _courseRepository.GetById(course.Id);
+            if (existingCourse == null) return NotFound();
+
+            existingCourse.Title = course.Title;
+            existingCourse.Description = course.Description;
+            existingCourse.CategoryId = course.CategoryId;
+            existingCourse.Price = course.Price;
+
+            _courseRepository.Update(existingCourse);
             return RedirectToAction("Courses");
         }
 
@@ -190,72 +160,70 @@ namespace Education_Portal.Controllers
             return RedirectToAction("Courses");
         }
 
-        public IActionResult Settings()
-        {
-            return View();
-        }
+        public IActionResult Settings() => View();
 
         [HttpPost]
-        [HttpPost]
-        public IActionResult Settings(string currentPassword, string newPassword)
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Settings(string currentPassword, string newPassword)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            int userId = 0;
-            if (!string.IsNullOrEmpty(userIdString))
-            {
-                int.TryParse(userIdString, out userId);
-            }
-            if (userId == 0)
-            {
-                return RedirectToAction("Login", "Account");
-            }
-            var user = _userRepository.GetById(userId);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
+
+            var user = await _userManager.FindByIdAsync(userId);
             if (user == null) return NotFound();
 
-            if (user.Password == currentPassword)
+            var result = await _userManager.ChangePasswordAsync(user, currentPassword, newPassword);
+
+            if (result.Succeeded)
             {
-                user.Password = newPassword;
-                _userRepository.Update(user);
                 ViewBag.Message = "Şifreniz başarıyla değiştirildi!";
                 ViewBag.Type = "success";
             }
             else
             {
-                ViewBag.Message = "Mevcut şifreniz yanlış, lütfen tekrar deneyin.";
+                ViewBag.Message = string.Join(" ", result.Errors.Select(e => e.Description));
                 ViewBag.Type = "danger";
             }
             return View();
         }
 
-        public IActionResult BanUser(int id, int days)
+        public IActionResult Users() => View(_userManager.Users.ToList());
+
+        public async Task<IActionResult> BanUser(int id, int days)
         {
-            DateTime banUntil = DateTime.Now.AddDays(days);
-            _userRepository.BanUser(id, banUntil);
-            return RedirectToAction("Users");
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user != null)
+            {
+                user.BanEndDate = DateTime.Now.AddDays(days);
+                await _userManager.UpdateAsync(user);
+            }
+            return RedirectToAction(nameof(Users));
         }
 
-        public IActionResult UnbanUser(int id)
+        public async Task<IActionResult> UnbanUser(int id)
         {
-            _userRepository.UnbanUser(id);
-            return RedirectToAction("Users");
-        }
-
-        public IActionResult Users()
-        {
-            var users = _userRepository.GetAll();
-            return View(users);
+            var user = await _userManager.FindByIdAsync(id.ToString());
+            if (user != null)
+            {
+                user.BanEndDate = null;
+                await _userManager.UpdateAsync(user);
+            }
+            return RedirectToAction(nameof(Users));
         }
 
         [HttpGet]
-        public IActionResult DeleteUser(int id)
+        public async Task<IActionResult> DeleteUser(int id)
         {
-            var user = _context.Users.Find(id);
+            var user = await _userManager.FindByIdAsync(id.ToString());
             if (user != null)
             {
-                _context.Users.Remove(user);
-                _context.SaveChanges();
+                string userName = user.UserName;
+                await _userManager.DeleteAsync(user);
+                var userCount = await _userManager.Users.CountAsync();
+                await _hubContext.Clients.All.SendAsync("ReceiveUserCount", userCount);
+                await _hubContext.Clients.All.SendAsync("ReceiveNotification", $"{userName} adlı üyenin hesabı silindi.");
             }
-            return RedirectToAction("Index");
+            return RedirectToAction(nameof(Users));
         }
 
         public IActionResult Comments()
@@ -277,7 +245,51 @@ namespace Education_Portal.Controllers
                 _context.Comments.Remove(comment);
                 _context.SaveChanges();
             }
-            return RedirectToAction("Comments");
+            return RedirectToAction(nameof(Comments));
+        }
+
+        public IActionResult Enrollments()
+        {
+            var list = new List<AdminCourseUserViewModel>();
+
+            var orders = _context.Orders
+                                 .Include(x => x.User)
+                                 .Include(x => x.Course)
+                                 .ToList();
+
+            foreach (var item in orders)
+            {
+                list.Add(new AdminCourseUserViewModel
+                {
+                    StudentName = item.User?.FullName ?? "Silinmiş Üye",
+                    StudentEmail = item.User?.Email,
+                    CourseTitle = item.Course?.Title ?? "Silinmiş Kurs",
+                    Date = item.Date,
+                    Type = "Satın Alma",
+                    Price = item.Price
+                });
+            }
+
+            var enrollments = _context.Enrollments
+                                      .Include(x => x.User)
+                                      .Include(x => x.Course)
+                                      .ToList();
+
+            foreach (var item in enrollments)
+            {
+                list.Add(new AdminCourseUserViewModel
+                {
+                    StudentName = item.User?.FullName ?? "Silinmiş Üye",
+                    StudentEmail = item.User?.Email,
+                    CourseTitle = item.Course?.Title ?? "Silinmiş Kurs",
+                    Date = item.EnrollmentDate,
+                    Type = "Ücretsiz Kayıt",
+                    Price = 0
+                });
+            }
+
+            var sortedList = list.OrderByDescending(x => x.Date).ToList();
+            return View(sortedList);
         }
     }
 }

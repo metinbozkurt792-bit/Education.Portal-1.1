@@ -3,7 +3,10 @@
 
 @{
     ViewData["Title"] = Model.Course.Title;
-    Layout = "~/Views/Shared/_Layout.cshtml";
+    Layout = "~/Views/Shared/_LayoutCourse.cshtml";
+    
+    bool hasAccess = (ViewBag.IsOwner == true) || User.IsInRole("Admin");
+    bool isFree = Model.Course.Price == 0;
 }
 
 <div class="container mt-4">
@@ -25,10 +28,13 @@
 
     <div class="row">
         <div class="col-md-8">
+
             <div class="card mb-4 shadow-sm">
                 <div class="card-body">
                     <h1 class="card-title">@Model.Course.Title</h1>
-                    <p class="card-text text-muted">@Model.Course.Description</p>
+                    <p class="card-text text-muted">
+                        @(Model.Course.Description ?? "Açıklama bulunmuyor.")
+                    </p>
                     <div class="d-flex justify-content-between align-items-center">
                         <span class="badge bg-primary">Kategori: @Model.Course.Category?.Name</span>
                         <span class="badge bg-warning text-dark">
@@ -42,16 +48,35 @@
             <div class="list-group mb-5">
                 @if (Model.Course.Videos != null && Model.Course.Videos.Any())
                 {
-                    int sayac = 1;
-                    foreach (var video in Model.Course.Videos)
+                    for (int i = 0; i < Model.Course.Videos.Count; i++)
                     {
+                        var video = Model.Course.Videos[i];
+                        bool isUnlocked = (i == 0) || hasAccess;
+
                         <div class="list-group-item d-flex justify-content-between align-items-center">
-                            <span><strong>Ders @sayac:</strong> @video.Title</span>
-                            <a asp-action="Watch" asp-route-id="@video.Id" class="btn btn-sm btn-outline-primary">
-                                <i class="fas fa-play-circle"></i> İzle
-                            </a>
+                            <div>
+                                <span class="fw-bold me-2">Ders @(i + 1):</span>
+                                @video.Title
+                                
+                                @if (i == 0 && !hasAccess)
+                                {
+                                    <span class="badge bg-success ms-2" style="font-size: 0.7em;">Ücretsiz Önizleme</span>
+                                }
+                            </div>
+
+                            @if (isUnlocked)
+                            {
+                                <a asp-action="Watch" asp-route-id="@video.Id" class="btn btn-sm btn-outline-primary">
+                                    <i class="fas fa-play-circle"></i> İzle
+                                </a>
+                            }
+                            else
+                            {
+                                <button class="btn btn-sm btn-light text-muted" disabled>
+                                    <i class="fas fa-lock"></i> Kilitli
+                                </button>
+                            }
                         </div>
-                        sayac++;
                     }
                 }
                 else
@@ -79,12 +104,10 @@
                                     <small class="text-muted">@comment.Date.ToString("dd.MM.yyyy")</small>
                                 </div>
                                 <div class="text-warning mb-2">
-                                    @for (int i = 0; i < comment.Rating; i++)
-                                    {
-                                        <span>★</span>
-                                    }
+                                    @for (int i = 0; i < comment.Rating; i++) { <span>★</span> }
                                 </div>
                                 <p class="card-text small text-secondary">@comment.Content</p>
+                                
                                 @if (canDelete)
                                 {
                                     <div class="d-flex justify-content-end mt-2 border-top pt-2 gap-2">
@@ -102,39 +125,91 @@
                 }
                 else
                 {
-                    <div class="text-center text-muted py-4">
-                        Henüz yorum yapılmamış. İlk yorumu sen yap!
-                    </div>
+                    <div class="text-center text-muted py-4">Henüz yorum yapılmamış.</div>
                 }
             </div>
         </div>
 
         <div class="col-md-4">
-            <div class="card shadow-sm mb-4 bg-light sticky-top" style="top: 20px; z-index: 1;">
+            
+            <div class="card shadow-sm mb-4 sticky-top" style="top: 20px; z-index: 2;">
+                <div class="card-body text-center">
+                    
+                    <h3 class="text-primary fw-bold mb-3">
+                        @(isFree ? "Ücretsiz" : "₺" + Model.Course.Price)
+                    </h3>
+
+                    @if (hasAccess)
+                    {
+                        <div class="alert alert-success mb-0">
+                            @if (User.IsInRole("Admin"))
+                            {
+                                <i class="fas fa-user-shield"></i> <strong>Admin Erişimi</strong>
+                            }
+                            else
+                            {
+                                <i class="fas fa-check-circle"></i> <span>Bu kursa sahipsiniz.</span>
+                            }
+                        </div>
+                    }
+                    else if (isFree)
+                    {
+                        <form asp-controller="Course" asp-action="Join" asp-route-id="@Model.CourseId" method="post">
+                            <button type="submit" class="btn btn-success w-100 btn-lg shadow">
+                                <i class="fas fa-user-plus"></i> Kursa Hemen Katıl
+                            </button>
+                        </form>
+                    }
+                    else
+                    {
+                        <a href="/Order/Checkout?courseId=@Model.CourseId" class="btn btn-primary w-100 btn-lg shadow">
+                            <i class="fas fa-shopping-cart"></i> Hemen Satın Al
+                        </a>
+                        <small class="text-muted d-block mt-2">Ömür boyu erişim</small>
+                    }
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4 bg-light" style="z-index: 1;">
                 <div class="card-header bg-warning text-dark fw-bold">
                     Puan Ver & Yorum Yap
                 </div>
                 <div class="card-body">
-                    <form asp-action="AddComment" method="post">
-                        <input type="hidden" name="CourseId" value="@Model.CourseId" />
-                        <div class="mb-3">
-                            <label class="form-label">Puanınız</label>
-                            <select asp-for="NewRating" class="form-select">
-                                <option value="5">⭐⭐⭐⭐⭐ (Mükemmel)</option>
-                                <option value="4">⭐⭐⭐⭐ (İyi)</option>
-                                <option value="3">⭐⭐⭐ (Orta)</option>
-                                <option value="2">⭐⭐ (Kötü)</option>
-                                <option value="1">⭐ (Berbat)</option>
-                            </select>
+
+                    @if (hasAccess)
+                    {
+                        <form asp-action="AddComment" method="post">
+                            <input type="hidden" name="CourseId" value="@Model.CourseId" />
+                            <div class="mb-3">
+                                <label class="form-label">Puanınız</label>
+                                <select asp-for="NewRating" class="form-select">
+                                    <option value="5">⭐⭐⭐⭐⭐ (Mükemmel)</option>
+                                    <option value="4">⭐⭐⭐⭐ (İyi)</option>
+                                    <option value="3">⭐⭐⭐ (Orta)</option>
+                                    <option value="2">⭐⭐ (Kötü)</option>
+                                    <option value="1">⭐ (Berbat)</option>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Yorumunuz</label>
+                                <textarea asp-for="NewCommentText" class="form-control" rows="3" placeholder="Düşüncelerinizi yazın..." required></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary w-100">Yorumu Gönder</button>
+                        </form>
+                    }
+                    else
+                    {
+                        <div class="text-center py-3">
+                            <i class="fas fa-info-circle text-muted fa-2x mb-2"></i>
+                            <p class="text-muted mb-0 small">
+                                Yorum yapabilmek ve tüm derslere erişebilmek için lütfen <br>
+                                <strong>yukarıdaki panelden</strong> kursa katılın.
+                            </p>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label">Yorumunuz</label>
-                            <textarea asp-for="NewCommentText" class="form-control" rows="3" placeholder="Düşüncelerinizi yazın..." required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100">Yorumu Gönder</button>
-                    </form>
+                    }
                 </div>
             </div>
+
         </div>
     </div>
 </div>

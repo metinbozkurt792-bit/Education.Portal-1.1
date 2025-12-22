@@ -1,0 +1,86 @@
+﻿@model Education_Portal.Models.Course
+
+@{
+    ViewData["Title"] = "Ödeme Yap";
+    Layout = "~/Views/Shared/_LayoutCourse.cshtml";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-primary text-white text-center py-4">
+                    <h3><i class="fas fa-shopping-cart me-2"></i> Güvenli Ödeme</h3>
+                    <p class="mb-0">Öğrenmeye başlamak için son bir adım!</p>
+                </div>
+                <div class="card-body p-5">
+
+                    <div class="row">
+                        <div class="col-md-5 border-end">
+                            <h5 class="text-muted">Satın Alınan Kurs</h5>
+                            <h4 class="text-primary mt-2">@Model.Title</h4>
+
+                            <p class="text-secondary">
+                                @{
+                                    var safeDescription = Model.Description ?? "Bu kurs için açıklama girilmemiş.";
+                                }
+                                @(safeDescription.Length > 100 ? safeDescription.Substring(0, 100) + "..." : safeDescription)
+                            </p>
+
+                            <hr />
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="fw-bold">Toplam Tutar:</span>
+                                @if (Model.Price > 0)
+                                {
+                                    <span class="display-6 text-success fw-bold">₺@Model.Price</span>
+                                }
+                                else
+                                {
+                                    <span class="display-6 text-success fw-bold">Ücretsiz</span>
+                                }
+                            </div>
+                        </div>
+
+                        <div class="col-md-7 ps-md-5">
+                            <form asp-action="Checkout" method="post">
+                                <input type="hidden" name="courseId" value="@Model.Id" />
+
+                                <div class="mb-3">
+                                    <label class="form-label">Kart Üzerindeki İsim</label>
+                                    <input type="text" name="cardName" class="form-control form-control-lg" placeholder="Ad Soyad" required>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label class="form-label">Kart Numarası</label>
+                                    <div class="input-group">
+                                        <input type="text" name="cardNumber" class="form-control form-control-lg" placeholder="0000 0000 0000 0000" maxlength="19" required>
+                                        <span class="input-group-text"><i class="fas fa-credit-card"></i></span>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label">Son Kullanma (Ay/Yıl)</label>
+                                        <input type="text" class="form-control form-control-lg" placeholder="MM/YY" maxlength="5" required>
+                                    </div>
+                                    <div class="col-6 mb-3">
+                                        <label class="form-label">CVV</label>
+                                        <input type="text" class="form-control form-control-lg" placeholder="123" maxlength="3" required>
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="btn btn-success w-100 btn-lg mt-3 shadow">
+                                    <i class="fas fa-lock me-2"></i> @Model.Price TL Öde ve Başla
+                                </button>
+                                <div class="text-center mt-2">
+                                    <small class="text-muted"><i class="fas fa-shield-alt"></i> Ödemeniz 256-bit SSL ile korunmaktadır.</small>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

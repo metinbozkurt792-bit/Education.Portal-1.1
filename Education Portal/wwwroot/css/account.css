@@ -1,0 +1,161 @@
+﻿/* account.css - Temiz CSS Dosyası */
+
+/* GENEL SAYFA YAPISI */
+body {
+    background-color: #080710;
+    font-family: 'Poppins', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    position: relative;
+    margin: 0;
+}
+
+/* ARKA PLAN TOPLARI */
+.background {
+    width: 430px;
+    height: 520px;
+    position: absolute;
+    transform: translate(-50%, -50%);
+    left: 50%;
+    top: 50%;
+    z-index: -1; /* Kartın arkasında kalsın */
+}
+
+.shape {
+    height: 200px;
+    width: 200px;
+    position: absolute;
+    border-radius: 50%;
+}
+
+    .shape:first-child {
+        background: linear-gradient(#1845ad, #23a2f6);
+        left: -80px;
+        top: -80px;
+    }
+
+    .shape:last-child {
+        background: linear-gradient(to right, #ff512f, #f09819);
+        right: -30px;
+        bottom: -80px;
+    }
+
+/* CAM KART (GLASSMORPHISM) */
+.glass-card {
+    width: 400px;
+    background-color: rgba(255, 255, 255, 0.13);
+    position: absolute;
+    transform: translate(-50%, -50%);
+    top: 50%;
+    left: 50%;
+    border-radius: 10px;
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); /* Safari desteği */
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
+    padding: 50px 35px;
+    color: #ffffff;
+    animation: fadeIn 1s ease-in-out;
+}
+
+    /* Input Alanları */
+    .glass-card input.form-control {
+        display: block;
+        height: 50px;
+        width: 100%;
+        background-color: rgba(255, 255, 255, 0.07);
+        border-radius: 3px;
+        padding: 0 10px;
+        margin-top: 8px;
+        font-size: 14px;
+        font-weight: 300;
+        color: #ffffff;
+        border: none;
+    }
+
+        .glass-card input.form-control:focus {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: #fff;
+            box-shadow: none;
+            outline: none;
+        }
+
+        .glass-card input.form-control::placeholder {
+            color: #e5e5e5;
+        }
+
+    .glass-card label {
+        font-size: 16px;
+        font-weight: 500;
+        margin-top: 20px;
+        display: block;
+    }
+
+    .glass-card h3 {
+        font-size: 32px;
+        font-weight: 500;
+        line-height: 42px;
+        text-align: center;
+        margin-bottom: 30px;
+    }
+
+/* Buton */
+.btn-glass {
+    margin-top: 30px;
+    width: 100%;
+    background-color: #ffffff;
+    color: #080710;
+    padding: 15px 0;
+    font-size: 18px;
+    font-weight: 600;
+    border-radius: 5px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+    .btn-glass:hover {
+        background-color: #f0f0f0;
+        transform: scale(1.02);
+    }
+
+.glass-links {
+    text-align: center;
+    margin-top: 20px;
+}
+
+    .glass-links a {
+        color: #fff;
+        text-decoration: none;
+        font-size: 0.9em;
+        opacity: 0.8;
+        transition: opacity 0.3s;
+    }
+
+        .glass-links a:hover {
+            opacity: 1;
+            text-decoration: underline;
+        }
+
+.text-danger {
+    color: #ff6b6b !important;
+    font-size: 0.85em;
+    margin-top: 5px;
+    display: block;
+}
+
+/* Animasyon */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translate(-50%, -60%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%);
+    }
+}

@@ -28,15 +28,18 @@ namespace Education_Portal.Controllers
         public IActionResult GetCourses(int categoryId, string search)
         {
             var courses = _courseRepository.GetAll();
+            if (!string.IsNullOrEmpty(search))
+            {
+                search = search.ToLower(); 
 
+                courses = courses.Where(c =>
+                    (c.Title != null && c.Title.ToLower().Contains(search)) ||
+                    (c.Description != null && c.Description.ToLower().Contains(search))
+                ).ToList();
+            }
             if (categoryId > 0)
             {
                 courses = courses.Where(c => c.CategoryId == categoryId).ToList();
-            }
-
-            if (!string.IsNullOrEmpty(search))
-            {
-                courses = courses.Where(c => c.Title.ToLower().Contains(search.ToLower())).ToList();
             }
 
             return PartialView("_CourseList", courses);

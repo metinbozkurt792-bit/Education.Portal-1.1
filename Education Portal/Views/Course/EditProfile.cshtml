@@ -1,0 +1,65 @@
+﻿@model Education_Portal.ViewModels.UserEditViewModel
+
+@{
+    ViewData["Title"] = "Profili Düzenle";
+    Layout = "~/Views/Shared/_LayoutCourse.cshtml";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow border-0">
+                <div class="card-header bg-white py-3">
+                    <h4 class="mb-0 fw-bold text-primary"><i class="fas fa-user-edit me-2"></i>Profil Bilgilerim</h4>
+                </div>
+                <div class="card-body p-4">
+
+                    @if (TempData["SuccessMessage"] != null)
+                    {
+                        <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+                    }
+
+                    <form asp-action="EditProfile" method="post" enctype="multipart/form-data">
+
+                        <div class="row mb-4 align-items-center">
+                            <div class="col-md-3 text-center">
+                                @if (string.IsNullOrEmpty(Model.CurrentImage))
+                                {
+                                    <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center mx-auto" style="width: 100px; height: 100px; font-size: 40px;">
+                                        @(Model.FullName?.Substring(0, 1).ToUpper() ?? "U")
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img src="~/img/profiles/@Model.CurrentImage" class="rounded-circle img-thumbnail shadow-sm" style="width: 100px; height: 100px; object-fit: cover;" />
+                                }
+                            </div>
+                            <div class="col-md-9">
+                                <label class="form-label fw-bold">Profil Resmi Yükle</label>
+                                <input asp-for="ProfilePicture" type="file" class="form-control" accept="image/*" />
+                                <small class="text-muted">Kare boyutunda (1:1) resimler daha iyi görünür.</small>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Ad Soyad</label>
+                            <input asp-for="FullName" class="form-control" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">E-Posta</label>
+                            <input asp-for="Email" class="form-control" readonly />
+                            <small class="text-muted">E-posta adresi güvenlik nedeniyle değiştirilemez.</small>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="/Course/MyCourses" class="btn btn-light">İptal</a>
+                            <button type="submit" class="btn btn-primary px-4">Değişiklikleri Kaydet</button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
